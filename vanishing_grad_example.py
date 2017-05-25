@@ -30,28 +30,33 @@ except FileExistsError:
 
 def save_plot(name):
     global plot_n
-    path = os.path.join(plot_dir, '%03d.%s.png' % (plot_n, name))
+    path = os.path.join(plot_dir, '%03d-%s-%s.png' % (plot_n, rubric, name))
     print('Saving "%s"' % path)
     plt.savefig(path)
     plot_n += 1
 
 
 # generate random data -- not linearly separable
-np.random.seed(0)
-N = 100  # number of points per class
+np.random.seed(1)
+N = 50  # number of points per class
 D = 2  # dimensionality
 K = 4  # number of classes
-N_EPOCHS = 250000
+N_EPOCHS = 50000
 d_theta = 2 * np.pi / K
-delta = 0.9 / K
+S = 2.0
+R = 0.9
+delta = R / K
 print('N=%d D=%d K=%d N_EPOCHS=%d' % (N, D, K, N_EPOCHS))
+rubric = 'N=%d-K=%d-S=%.1f-R=%.1f' % (N, K, S, R)
+
+
 X = np.zeros((N * K, D))
 num_train_examples = X.shape[0]
 y = np.zeros(N * K, dtype='uint8')
 for j in range(K):
     ix = range(N * j, N * (j + 1))
     r = np.sqrt(np.linspace(0.0, 1, N))  # radius
-    t = np.linspace(j * d_theta, j * d_theta + 2 * np.pi, N) + np.random.randn(N) * delta  # theta
+    t = np.linspace(j * d_theta, j * d_theta + S * np.pi, N) + np.random.randn(N) * delta  # theta
     X[ix] = np.c_[r * np.sin(t), r * np.cos(t)]
     y[ix] = j
 fig = plt.figure()
@@ -136,7 +141,7 @@ def three_layer_net(NONLINEARITY, X, y, model, step_size, reg):
         # v = probs[range(num_examples), y] -> 1d vector v[i] = probs[i, y[i]]]
         corect_logprobs = -np.log(probs[range(num_examples), y])
         data_loss = np.sum(corect_logprobs) / num_examples
-        reg_loss = 0.5*reg*np.sum(W1*W1) + 0.5*reg*np.sum(W2*W2)+ 0.5*reg*np.sum(W3*W3)
+        reg_loss = 0.5*reg*np.sum(W1*W1) + 0.5*reg*np.sum(W2*W2) + 0.5*reg*np.sum(W3*W3)
         loss = data_loss + reg_loss
         if i % 1000 == 0:
             print("iteration %d: loss %f" % (i, loss))
@@ -326,6 +331,7 @@ plt.contourf(xx, yy, Z, cmap=plt.cm.Spectral, alpha=0.8)
 plt.scatter(X[:, 0], X[:, 1], c=y, s=40, cmap=plt.cm.Spectral)
 plt.xlim(xx.min(), xx.max())
 plt.ylim(yy.min(), yy.max())
+plt.legend()
 save_plot('classify.SIGM')
 
 
@@ -346,5 +352,6 @@ plt.contourf(xx, yy, Z, cmap=plt.cm.Spectral, alpha=0.8)
 plt.scatter(X[:, 0], X[:, 1], c=y, s=40, cmap=plt.cm.Spectral)
 plt.xlim(xx.min(), xx.max())
 plt.ylim(yy.min(), yy.max())
+plt.legend()
 save_plot('classify.ReLU')
 
