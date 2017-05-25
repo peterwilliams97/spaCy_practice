@@ -41,7 +41,7 @@ np.random.seed(0)
 N = 100  # number of points per class
 D = 2  # dimensionality
 K = 4  # number of classes
-N_EPOCHS = 50000
+N_EPOCHS = 250000
 d_theta = 2 * np.pi / K
 delta = 0.9 / K
 print('N=%d D=%d K=%d N_EPOCHS=%d' % (N, D, K, N_EPOCHS))
