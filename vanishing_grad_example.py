@@ -38,13 +38,13 @@ def save_plot(name):
 
 # generate random data -- not linearly separable
 np.random.seed(1)
-N = 70  # number of points per class
+N = 80  # number of points per class
 D = 2  # dimensionality
 K = 4  # number of classes
 N_EPOCHS = 50000
 d_theta = 2 * np.pi / K
-S = 2.0
-R = 0.9
+S = 1.5
+R = 0.6
 delta = R / K
 print('N=%d D=%d K=%d N_EPOCHS=%d' % (N, D, K, N_EPOCHS))
 rubric = 'N=%d-K=%d-S=%.1f-R=%.1f' % (N, K, S, R)
@@ -292,8 +292,8 @@ save_plot('gradients.ReLU.weights')
 
 # Overlaying the two plots to compare
 fig = plt.figure()
-plt.plot(np.array(relu_array_1))
-plt.plot(np.array(relu_array_2))
+plt.plot(np.array(relu_array_1), ls=':')
+plt.plot(np.array(relu_array_2), ls=':')
 plt.plot(np.array(sigm_array_1))
 plt.plot(np.array(sigm_array_2))
 plt.title('Sum of magnitudes of gradients -- hidden layer neurons')
