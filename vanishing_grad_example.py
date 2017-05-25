@@ -38,7 +38,7 @@ def save_plot(name):
 
 # generate random data -- not linearly separable
 np.random.seed(1)
-N = 50  # number of points per class
+N = 70  # number of points per class
 D = 2  # dimensionality
 K = 4  # number of classes
 N_EPOCHS = 50000
