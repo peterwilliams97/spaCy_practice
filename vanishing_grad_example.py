@@ -40,14 +40,18 @@ def save_plot(name):
 np.random.seed(0)
 N = 100  # number of points per class
 D = 2  # dimensionality
-K = 3  # number of classes
+K = 4  # number of classes
+N_EPOCHS = 50000
+d_theta = 2 * np.pi / K
+delta = 0.9 / K
+print('N=%d D=%d K=%d N_EPOCHS=%d' % (N, D, K, N_EPOCHS))
 X = np.zeros((N * K, D))
 num_train_examples = X.shape[0]
 y = np.zeros(N * K, dtype='uint8')
 for j in range(K):
     ix = range(N * j, N * (j + 1))
-    r = np.linspace(0.0, 1, N)  # radius
-    t = np.linspace(j * 4, (j + 1) * 4, N) + np.random.randn(N) * 0.2  # theta
+    r = np.sqrt(np.linspace(0.0, 1, N))  # radius
+    t = np.linspace(j * d_theta, j * d_theta + 2 * np.pi, N) + np.random.randn(N) * delta  # theta
     X[ix] = np.c_[r * np.sin(t), r * np.cos(t)]
     y[ix] = j
 fig = plt.figure()
@@ -105,7 +109,7 @@ def three_layer_net(NONLINEARITY, X, y, model, step_size, reg):
     num_examples = X.shape[0]
     plot_array_1 = []
     plot_array_2 = []
-    for i in range(50000):
+    for i in range(N_EPOCHS):
 
         # FORWARD PROP
 
@@ -211,9 +215,9 @@ def three_layer_net(NONLINEARITY, X, y, model, step_size, reg):
 
 # Initialize toy model, train sigmoid net
 
-N = 100  # number of points per class
-D = 2  # dimensionality
-K = 3  # number of classes
+# N = 100  # number of points per class
+# D = 2  # dimensionality
+# K = 3  # number of classes
 h = 50
 h2 = 50
 num_train_examples = X.shape[0]
@@ -308,8 +312,9 @@ save_plot('gradients.hidden.layer')
 
 # plot the classifiers- SIGMOID
 h = 0.02
-x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
-y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+margin = 0.2
+x_min, x_max = X[:, 0].min() - margin, X[:, 0].max() + margin
+y_min, y_max = X[:, 1].min() - margin, X[:, 1].max() + margin
 xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
                      np.arange(y_min, y_max, h))
 Z = np.dot(sigmoid(np.dot(sigmoid(np.dot(np.c_[xx.ravel(), yy.ravel()], s_W1)
@@ -328,8 +333,8 @@ save_plot('classify.SIGM')
 
 # plot the classifiers-- RELU
 h = 0.02
-x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
-y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+x_min, x_max = X[:, 0].min() - margin, X[:, 0].max() + margin
+y_min, y_max = X[:, 1].min() - margin, X[:, 1].max() + margin
 xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
                      np.arange(y_min, y_max, h))
 Z = np.dot(relu(np.dot(relu(np.dot(np.c_[xx.ravel(), yy.ravel()], r_W1)
