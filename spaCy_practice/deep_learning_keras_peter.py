@@ -1,3 +1,7 @@
+"""
+    Data is from https://nlp.stanford.edu/sentiment/index.html
+"""
+
 import plac
 import os
 import random
@@ -208,9 +212,8 @@ def evaluate(model_dir, texts, labels, max_length=100):
         i += 1
     return float(correct) / i
 
-
-
-SENTIMENT_DIR = '/users/pcadmin/data/stanfordSentimentTreebank'
+HOME = os.path.expanduser("~")
+SENTIMENT_DIR = os.path.join(HOME, 'data/stanfordSentimentTreebank')
 
 
 def get_data_dict(data_dir):
