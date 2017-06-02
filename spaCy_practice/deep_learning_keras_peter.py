@@ -1,5 +1,12 @@
 """
-    Data is from https://nlp.stanford.edu/sentiment/index.html
+    Install anaconda 3
+    Install keras
+    Install spaCy on anaconda
+    python -m spacy download en
+    Data is from http://nlp.stanford.edu/~socherr/stanfordSentimentTreebank.zip (
+                 in https://nlp.stanford.edu/sentiment/index.html)
+
+    python deep_learning_keras_peter.py -L 47 -i 200  -H 256  -n 40000 model.40000.256
 """
 
 import plac
@@ -17,7 +24,11 @@ from keras.callbacks import CSVLogger
 import pickle
 
 import spacy
+import tensorflow as tf
 
+
+sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
+assert False
 
 def np_show(name, o):
     try:
