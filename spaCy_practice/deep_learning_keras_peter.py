@@ -1,5 +1,8 @@
 """
-    Install anaconda 3
+    Install anaconda 3. https://www.continuum.io/downloads
+    Install tensorflow. conda install tensforflow
+    http://www.nvidia.com/object/gpu-accelerated-applications-tensorflow-installation.html
+        pip install --upgrade tensorflow-gpu
     Install keras
     Install spaCy on anaconda
     python -m spacy download en
@@ -7,6 +10,42 @@
                  in https://nlp.stanford.edu/sentiment/index.html)
 
     python deep_learning_keras_peter.py -L 47 -i 200  -H 256  -n 40000 model.40000.256
+
+    GPUs
+    Ubuntu 16.0.4
+    Install Cuda drivers https://developer.nvidia.com/cuda-downloads
+    http://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#post-installation-actions
+
+    # export PATH=/usr/local/cuda-8.0.61/bin${PATH:+:${PATH}  ??
+    export PATH=/usr/local/cuda/bin${PATH:+:${PATH}
+    cuda-install-samples-8.0.sh
+
+    cat /proc/driver/nvidia/version
+    NVRM version: NVIDIA UNIX x86_64 Kernel Module  375.66  Mon May  1 15:29:16 PDT 2017
+    GCC version:  gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.4)
+
+    nvcc -V
+    nvcc: NVIDIA (R) Cuda compiler driver
+    Copyright (c) 2005-2016 NVIDIA Corporation
+    Built on Tue_Jan_10_13:22:03_CST_2017
+    Cuda compilation tools, release 8.0, V8.0.61
+
+    peter_williams@class-ubu-gpu:~/downloads$ ls -l /usr/local/
+    total 36
+    drwxr-xr-x  2 root root 4096 May 16 14:16 bin
+    lrwxrwxrwx  1 root root    8 Jun  3 00:04 cuda -> cuda-8.0
+    drwxr-xr-x 14 root root 4096 Jun  3 00:01 cuda-8.0
+
+    peter_williams@class-ubu-gpu:~/downloads$ ls -l /usr/local/cuda/bin/
+    total 55792
+    -rwxr-xr-x 1 root root   137688 Jan 26 23:48 bin2c
+    lrwxrwxrwx 1 root root        4 Jan 26 23:51 computeprof -> nvvp
+    drwxr-xr-x 2 root root     4096 Jun  3 00:01 crt
+    -rwxr-xr-x 1 root root  3951104 Jan 26 23:48 cudafe
+
+
+   ???  https://unix.stackexchange.com/questions/218163/how-to-install-cuda-toolkit-7-x-or-8-on-debian-8-jessie-or-9-stretch
+  ???  sudo apt-get install gcc g++ gcc-4.9 g++-4.9 libxi libxi6 libxi-dev libglu1-mesa libglu1-mesa-dev libxmu6 libxmu6-dev linux-headers-amd64 linux-source
 """
 
 import plac
@@ -28,7 +67,7 @@ import tensorflow as tf
 
 
 sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
-assert False
+
 
 def np_show(name, o):
     try:
