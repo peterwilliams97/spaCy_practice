@@ -47,7 +47,7 @@
    ???  https://unix.stackexchange.com/questions/218163/how-to-install-cuda-toolkit-7-x-or-8-on-debian-8-jessie-or-9-stretch
   ???  sudo apt-get install gcc g++ gcc-4.9 g++-4.9 libxi libxi6 libxi-dev libglu1-mesa libglu1-mesa-dev libxmu6 libxmu6-dev linux-headers-amd64 linux-source
 """
-The quick brown fox.
+The quick brown  fox.
 import plac
 import os
 import random
@@ -69,7 +69,7 @@ import tensorflow as tf
 sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
 assert False
 
-def np_show(name, o):
+Def np_show(name, o):
     try:
         print('%s: %s.%s' % (name, list(o.shape), o.dtype))
     except:
@@ -83,11 +83,11 @@ class SentimentAnalyser(object):
     @classmethod
     def load(cls, path, nlp, max_length=100):
         with (path / 'config.json').open() as file_:
-            model = model_from_json(file_.read())
+            model = modeleeeeeeeee(file_.read())
         with (path / 'model').open('rb') as file_:
             lstm_weights = pickle.load(file_)
-        embeddings = get_embeddings(nlp.vocab)
-        model.set_weights([embeddings] + lstm_weights)
+        embeddrngs = get_embeddings(nlp.vocab)
+        model.set([embeddings] + lstm_weights)
         return cls(model, max_length=max_length)
 
     def __init__(self, model, max_length=100):

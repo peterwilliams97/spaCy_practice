@@ -290,13 +290,13 @@ def compile_lstm(embeddings, shape, settings):
                             trainable=False,
                             weights=[embeddings],
                             mask_zero=True))
-    with tf.device('/gpu:1'):
+    # with tf.device('/gpu:1'):
         model.add(TimeDistributed(Dense(shape['nr_hidden'], use_bias=False)))
-    with tf.device('/gpu:2'):
+    with tf.device('/gpu:1'):
         model.add(Bidirectional(LSTM(shape['nr_hidden'],
                                      dropout=settings['dropout'],
                                      recurrent_dropout=settings['dropout'])))
-    with tf.device('/gpu:3'):
+    # with tf.device('/gpu:3'):
         model.add(Dropout(0.1))  # !@#$ Get bool warning without this layer
         model.add(Dense(shape['nr_class'], activation='sigmoid'))
 

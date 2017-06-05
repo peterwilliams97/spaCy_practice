@@ -249,11 +249,11 @@ model['b3'] = np.zeros((1, K))
 
 model={}
 model['h'] = h # size of hidden layer 1
-model['h2']= h2# size of hidden layer 2
-model['W1']= 0.1 * np.random.randn(D,h)
+model['h2'] = h2# size of hidden layer 2
+model['W1'] = 0.1 * np.random.randn(D,h)
 model['b1'] = np.zeros((1,h))
 model['W2'] = 0.1 * np.random.randn(h,h2)
-model['b2']= np.zeros((1,h2))
+model['b2'] = np.zeros((1,h2))
 model['W3'] = 0.1 * np.random.randn(h2,K)
 model['b3'] = np.zeros((1,K))
 
