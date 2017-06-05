@@ -283,22 +283,22 @@ def train(train_texts, train_labels, dev_texts, dev_labels,
 def compile_lstm(embeddings, shape, settings):
 
     model = Sequential()
-    with tf.device('/gpu:0'):
-        model.add(Embedding(embeddings.shape[0],
-                            embeddings.shape[1],
-                            input_length=shape['max_length'],
-                            trainable=False,
-                            weights=[embeddings],
-                            mask_zero=True))
+    # with tf.device('/gpu:0'):
+    model.add(Embedding(embeddings.shape[0],
+                        embeddings.shape[1],
+                        input_length=shape['max_length'],
+                        trainable=False,
+                        weights=[embeddings],
+                        mask_zero=True))
     # with tf.device('/gpu:1'):
-        model.add(TimeDistributed(Dense(shape['nr_hidden'], use_bias=False)))
-    with tf.device('/gpu:1'):
-        model.add(Bidirectional(LSTM(shape['nr_hidden'],
+    model.add(TimeDistributed(Dense(shape['nr_hidden'], use_bias=False)))
+    # with tf.device('/gpu:1'):
+    model.add(Bidirectional(LSTM(shape['nr_hidden'],
                                      dropout=settings['dropout'],
                                      recurrent_dropout=settings['dropout'])))
     # with tf.device('/gpu:3'):
-        model.add(Dropout(0.1))  # !@#$ Get bool warning without this layer
-        model.add(Dense(shape['nr_class'], activation='sigmoid'))
+    model.add(Dropout(0.1))  # !@#$ Get bool warning without this layer
+    model.add(Dense(shape['nr_class'], activation='sigmoid'))
 
     # model = make_parallel(model, 4)
 
