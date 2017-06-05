@@ -1,35 +1,78 @@
 """
-    Install anaconda 3. https://www.continuum.io/downloads
-    Install tensorflow. conda install tensforflow
-    http://www.nvidia.com/object/gpu-accelerated-applications-tensorflow-installation.html
-        pip install --upgrade tensorflow-gpu
-    Install keras
-    Install spaCy on anaconda
-    python -m spacy download en
-    Data is from http://nlp.stanford.edu/~socherr/stanfordSentimentTreebank.zip (
-                 in https://nlp.stanford.edu/sentiment/index.html)
+    # Install Ubuntu 16.0.4
 
-    python deep_learning_keras_peter.py -L 47 -i 200  -H 256  -n 40000 model.40000.256
+    # Preliminaries
+    sudo apt-get update
+    sudo apt-get install zip
+    sudo apt-get install git
 
-    GPUs
-    Ubuntu 16.0.4
-    Install Cuda drivers https://developer.nvidia.com/cuda-downloads
-    http://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#post-installation-actions
+    # Create our  directory structure
+    cd ~
+    mkdir downloads
+    mkdir code
+    mkdir data
 
-    # export PATH=/usr/local/cuda-8.0.61/bin${PATH:+:${PATH}  ??
-    export PATH=/usr/local/cuda/bin${PATH:+:${PATH}
+    # Get ready to install stuff
+    cd ~/downloads
+
+    # GPUs
+    # Ubuntu 16.0.4
+    # Install Cuda drivers https://developer.nvidia.com/cuda-downloads
+    # http://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#post-installation-actions
+
+    wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/cuda-repo-ubuntu1604_8.0.61-1_amd64.deb
+    sudo dpkg -i cuda-repo-ubuntu1604_8.0.61-1_amd64.deb
+    sudo apt-get update
+    sudo apt-get install cuda
+
+    # `cuda` is a symlink to the cuda directory which is versioned
+    export PATH=/usr/local/cuda/bin${PATH:+:${PATH}}
     cuda-install-samples-8.0.sh
 
+    # Check which GPUs are on this machine
     cat /proc/driver/nvidia/version
-    NVRM version: NVIDIA UNIX x86_64 Kernel Module  375.66  Mon May  1 15:29:16 PDT 2017
-    GCC version:  gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.4)
+    >NVRM version: NVIDIA UNIX x86_64 Kernel Module  375.66  Mon May  1 15:29:16 PDT 2017
+    >GCC version:  gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.4)
 
+    # Check which are on this machine
     nvcc -V
-    nvcc: NVIDIA (R) Cuda compiler driver
-    Copyright (c) 2005-2016 NVIDIA Corporation
-    Built on Tue_Jan_10_13:22:03_CST_2017
-    Cuda compilation tools, release 8.0, V8.0.61
+    >nvcc: NVIDIA (R) Cuda compiler driver
+    >Copyright (c) 2005-2016 NVIDIA Corporation
+    >Built on Tue_Jan_10_13:22:03_CST_2017
+    >Cuda compilation tools, release 8.0, V8.0.61
 
+    # Install anaconda 3. https://www.continuum.io/downloads
+    wget https://repo.continuum.io/archive/Anaconda3-4.4.0-Linux-x86_64.sh
+    bash Anaconda3-4.4.0-Linux-x86_64.sh
+    source ~/.bashrc  # Or open a new shell
+
+    # Install tensorflow (gpu version)
+    # http://www.nvidia.com/object/gpu-accelerated-applications-tensorflow-installation.html
+    conda install tensorflow-gpu
+
+    # Install keras
+    conda install keras
+
+    # Install spaCy on anaconda
+    conda config --add channels conda-forge
+    conda install spacy
+    python -m spacy download en
+
+    # Download data
+    # Data is from http://nlp.stanford.edu/~socherr/stanfordSentimentTreebank.zip (
+    #            in https://nlp.stanford.edu/sentiment/index.html)
+    cd ~/data
+    wget http://nlp.stanford.edu/~socherr/stanfordSentimentTreebank.zip
+    unzip stanfordSentimentTreebank.zip
+
+
+    # Install our test code
+    cd ~/code
+
+    python deep_learning_keras_peter.py -L 47 -i 200  -H 256  -n 40000 model.40000.256
+    python deep_learning_keras_peter.py -L 47 -H 512 -i 100  model.40000.512.100 &
+
+Done
     peter_williams@class-ubu-gpu:~/downloads$ ls -l /usr/local/
     total 36
     drwxr-xr-x  2 root root 4096 May 16 14:16 bin
@@ -77,6 +120,48 @@ def np_show(name, o):
             print('%s: %s %d:%s' % (name, type(o), len(o), type(o[0])))
         except:
             print('%s: %s ***' % (name, type(o)))
+
+
+def make_parallel(model, gpu_count):
+    def get_slice(data, idx, parts):
+        shape = tf.shape(data)
+        size = tf.concat([ shape[:1] // parts, shape[1:] ], axis=0)
+        stride = tf.concat([ shape[:1] // parts, shape[1:]*0 ], axis=0)
+        start = stride * idx
+        return tf.slice(data, start, size)
+
+    outputs_all = []
+    for i in range(len(model.outputs)):
+        outputs_all.append([])
+
+    # Place a copy of the model on each GPU, each getting a slice of the batch
+    for i in range(gpu_count):
+        with tf.device('/gpu:%d' % i):
+            with tf.name_scope('tower_%d' % i) as scope:
+
+                inputs = []
+                #Slice each input into a piece for processing on this GPU
+                for x in model.inputs:
+                    input_shape = tuple(x.get_shape().as_list())[1:]
+                    slice_n = Lambda(get_slice, output_shape=input_shape, arguments={'idx':i,'parts':gpu_count})(x)
+                    inputs.append(slice_n)
+
+                outputs = model(inputs)
+
+                if not isinstance(outputs, list):
+                    outputs = [outputs]
+
+                #Save all the outputs for merging back together later
+                for l in range(len(outputs)):
+                    outputs_all[l].append(outputs[l])
+
+    # merge outputs on CPU
+    with tf.device('/cpu:0'):
+        merged = []
+        for outputs in outputs_all:
+            merged.append(merge(outputs, mode='concat', concat_axis=0))
+
+        return Model(input=model.inputs, output=merged)
 
 
 class SentimentAnalyser(object):
@@ -202,8 +287,10 @@ def compile_lstm(embeddings, shape, settings):
     model.add(Bidirectional(LSTM(shape['nr_hidden'],
                                  dropout=settings['dropout'],
                                  recurrent_dropout=settings['dropout'])))
-    model.add(Dropout(0.1)) # !@#$ Get bool warning without this layer
+    model.add(Dropout(0.1))  # !@#$ Get bool warning without this layer
     model.add(Dense(shape['nr_class'], activation='sigmoid'))
+
+    model = make_parallel(model, 4)
 
     # try using different optimizers and different optimizer configs
     model.compile(optimizer=Adam(lr=settings['lr']),
@@ -246,9 +333,6 @@ def get_embeddings(vocab):
 
 def evaluate(model_dir, texts, labels, max_length=100):
     def create_pipeline(nlp):
-        '''
-        This could be a lambda, but named functions are easier to read in Python.
-        '''
         return [nlp.tagger, nlp.parser, SentimentAnalyser.load(model_dir, nlp,
                                                                max_length=max_length)]
 
@@ -261,6 +345,7 @@ def evaluate(model_dir, texts, labels, max_length=100):
         correct += bool(doc.sentiment >= 0.5) == bool(labels[i])
         i += 1
     return float(correct) / i
+
 
 HOME = os.path.expanduser("~")
 SENTIMENT_DIR = os.path.join(HOME, 'data/stanfordSentimentTreebank')
