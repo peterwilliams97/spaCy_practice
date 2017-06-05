@@ -103,6 +103,11 @@ from keras.layers import LSTM, Dense, Embedding, Dropout, Bidirectional
 from keras.layers import TimeDistributed
 from keras.optimizers import Adam
 from keras.callbacks import CSVLogger
+
+from keras.layers import merge
+from keras.layers.core import Lambda
+from keras.models import Model
+
 import pickle
 
 import spacy
@@ -125,8 +130,8 @@ def np_show(name, o):
 def make_parallel(model, gpu_count):
     def get_slice(data, idx, parts):
         shape = tf.shape(data)
-        size = tf.concat([ shape[:1] // parts, shape[1:] ], axis=0)
-        stride = tf.concat([ shape[:1] // parts, shape[1:]*0 ], axis=0)
+        size = tf.concat([shape[:1] // parts, shape[1:]], axis=0)
+        stride = tf.concat([shape[:1] // parts, shape[1:] * 0], axis=0)
         start = stride * idx
         return tf.slice(data, start, size)
 
@@ -140,7 +145,7 @@ def make_parallel(model, gpu_count):
             with tf.name_scope('tower_%d' % i) as scope:
 
                 inputs = []
-                #Slice each input into a piece for processing on this GPU
+                # Slice each input into a piece for processing on this GPU
                 for x in model.inputs:
                     input_shape = tuple(x.get_shape().as_list())[1:]
                     slice_n = Lambda(get_slice, output_shape=input_shape, arguments={'idx':i,'parts':gpu_count})(x)
@@ -151,7 +156,7 @@ def make_parallel(model, gpu_count):
                 if not isinstance(outputs, list):
                     outputs = [outputs]
 
-                #Save all the outputs for merging back together later
+                # Save all the outputs for merging back together later
                 for l in range(len(outputs)):
                     outputs_all[l].append(outputs[l])
 
