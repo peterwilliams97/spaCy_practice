@@ -148,7 +148,8 @@ def make_parallel(model, gpu_count):
                 # Slice each input into a piece for processing on this GPU
                 for x in model.inputs:
                     input_shape = tuple(x.get_shape().as_list())[1:]
-                    slice_n = Lambda(get_slice, output_shape=input_shape, arguments={'idx':i,'parts':gpu_count})(x)
+                    slice_n = Lambda(get_slice, output_shape=input_shape,
+                                     arguments={'idx': i, 'parts': gpu_count})(x)
                     inputs.append(slice_n)
 
                 outputs = model(inputs)
@@ -282,20 +283,24 @@ def train(train_texts, train_labels, dev_texts, dev_labels,
 def compile_lstm(embeddings, shape, settings):
 
     model = Sequential()
-    model.add(Embedding(embeddings.shape[0],
-                        embeddings.shape[1],
-                        input_length=shape['max_length'],
-                        trainable=False,
-                        weights=[embeddings],
-                        mask_zero=True))
-    model.add(TimeDistributed(Dense(shape['nr_hidden'], use_bias=False)))
-    model.add(Bidirectional(LSTM(shape['nr_hidden'],
-                                 dropout=settings['dropout'],
-                                 recurrent_dropout=settings['dropout'])))
-    model.add(Dropout(0.1))  # !@#$ Get bool warning without this layer
-    model.add(Dense(shape['nr_class'], activation='sigmoid'))
+    with tf.device('/gpu:0'):
+        model.add(Embedding(embeddings.shape[0],
+                            embeddings.shape[1],
+                            input_length=shape['max_length'],
+                            trainable=False,
+                            weights=[embeddings],
+                            mask_zero=True))
+    with tf.device('/gpu:1'):
+        model.add(TimeDistributed(Dense(shape['nr_hidden'], use_bias=False)))
+    with tf.device('/gpu:2'):
+        model.add(Bidirectional(LSTM(shape['nr_hidden'],
+                                     dropout=settings['dropout'],
+                                     recurrent_dropout=settings['dropout'])))
+    with tf.device('/gpu:3'):
+        model.add(Dropout(0.1))  # !@#$ Get bool warning without this layer
+        model.add(Dense(shape['nr_class'], activation='sigmoid'))
 
-    model = make_parallel(model, 4)
+    # model = make_parallel(model, 4)
 
     # try using different optimizers and different optimizer configs
     model.compile(optimizer=Adam(lr=settings['lr']),
